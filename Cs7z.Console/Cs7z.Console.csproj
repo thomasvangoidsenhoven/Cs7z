@@ -7,4 +7,15 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Cs7z.Core\Cs7z.Core.csproj" />
+      <ProjectReference Include="..\Cs7z.Service.MacOsx\Cs7z.Service.MacOsx.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="bin.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

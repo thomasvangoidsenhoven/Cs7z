@@ -7,9 +7,9 @@ public class SevenZipArchive : ISevenZipArchive
 {
     private readonly string _sevenZipPath;
 
-    public SevenZipArchive(ISevenZipExecutableSource? executableSource = null)
+    public SevenZipArchive(ISevenZipExecutableSource executableSource)
     {
-        _sevenZipPath = (executableSource ?? new DefaultSevenZipExecutableSource()).FindExecutable();
+        _sevenZipPath = executableSource.FindExecutable();
     }
 
     public async Task ExtractToDirectoryAsync(
@@ -29,7 +29,7 @@ public class SevenZipArchive : ISevenZipArchive
         Directory.CreateDirectory(destinationDirectoryName);
 
         var arguments = $"x \"{archiveFilePath}\" -o\"{destinationDirectoryName}\" -y";
-        await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
+        var output = await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
 
     public async Task CreateArchive(string archiveFilePath, string folder, CancellationToken cancellationToken = default)
@@ -50,7 +50,7 @@ public class SevenZipArchive : ISevenZipArchive
         }
 
         var arguments = $"a \"{archiveFilePath}\" \"{folder}\\*\" -r";
-        await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
+        var output = await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
 
     public async Task<string> ListArchive(string archiveFilePath, CancellationToken cancellationToken = default)

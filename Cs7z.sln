@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Core", "Cs7z.Core\Cs7z
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Console", "Cs7z.Console\Cs7z.Console.csproj", "{3ED0616D-E29B-42AE-8BD6-862BA6506921}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Service.MacOsx", "Cs7z.Service.MacOsx\Cs7z.Service.MacOsx.csproj", "{30663840-D20F-4B9A-B4A8-27F55C39BFDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,5 +28,9 @@ Global
 		{3ED0616D-E29B-42AE-8BD6-862BA6506921}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3ED0616D-E29B-42AE-8BD6-862BA6506921}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3ED0616D-E29B-42AE-8BD6-862BA6506921}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
