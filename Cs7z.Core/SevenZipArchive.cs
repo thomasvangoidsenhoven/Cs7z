@@ -51,7 +51,7 @@ public class SevenZipArchive : ISevenZipArchive
             Directory.CreateDirectory(archiveDirectory);
         }
 
-        var arguments = $"a \"{archiveFilePath}\" \"{folder}\\*\" -r";
+        var arguments = $"a \"{archiveFilePath}\" \"{Path.Combine(folder, "*")}\" -r";
         await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
 

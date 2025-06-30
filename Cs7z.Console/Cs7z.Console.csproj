@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Cs7z.Core\Cs7z.Core.csproj" />
-      <ProjectReference Include="..\Cs7z.Service.MacOsx\Cs7z.Service.MacOsx.csproj" />
+      <ProjectReference Include="..\Cs7z.Service.OmniPlatform\Cs7z.Service.OmniPlatform.csproj" />
     </ItemGroup>
 
     <ItemGroup>
