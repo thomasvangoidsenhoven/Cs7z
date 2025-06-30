@@ -14,6 +14,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Console", "Cs7z.Consol
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Service.MacOsx", "Cs7z.Service.MacOsx\Cs7z.Service.MacOsx.csproj", "{30663840-D20F-4B9A-B4A8-27F55C39BFDB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Service.Linux", "Cs7z.Service.Linux\Cs7z.Service.Linux.csproj", "{F48B3E99-685D-4B3F-B759-EA5633FC990B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cs7z.Service.Windows", "Cs7z.Service.Windows\Cs7z.Service.Windows.csproj", "{1CD049DC-84B7-43BF-9932-14EAE9EED04D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,5 +36,13 @@ Global
 		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30663840-D20F-4B9A-B4A8-27F55C39BFDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F48B3E99-685D-4B3F-B759-EA5633FC990B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F48B3E99-685D-4B3F-B759-EA5633FC990B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F48B3E99-685D-4B3F-B759-EA5633FC990B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F48B3E99-685D-4B3F-B759-EA5633FC990B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CD049DC-84B7-43BF-9932-14EAE9EED04D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CD049DC-84B7-43BF-9932-14EAE9EED04D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CD049DC-84B7-43BF-9932-14EAE9EED04D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CD049DC-84B7-43BF-9932-14EAE9EED04D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
