@@ -16,4 +16,8 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Cs7z.Core\Cs7z.Core.csproj" />
+    </ItemGroup>
+
 </Project>
