@@ -10,4 +10,16 @@
       <Folder Include="Source\Windows\x86\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Source\Windows\x86\7za.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Source\Windows\x86\7za.exe">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Source\Windows\x86\7zxa.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
