@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="Source\Windows\x86\" />
+    </ItemGroup>
+
 </Project>
