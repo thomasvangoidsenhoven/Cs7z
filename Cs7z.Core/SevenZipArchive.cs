@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Text;
+using Cs7z.Core.Models;
+using Cs7z.Core.Parsing;
 
 namespace Cs7z.Core;
 

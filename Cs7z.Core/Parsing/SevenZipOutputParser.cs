@@ -1,7 +1,8 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Cs7z.Core.Models;
 
-namespace Cs7z.Core;
+namespace Cs7z.Core.Parsing;
 
 internal static class SevenZipOutputParser
 {

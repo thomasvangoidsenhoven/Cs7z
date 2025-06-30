@@ -1,4 +1,4 @@
-namespace Cs7z.Core;
+namespace Cs7z.Core.Models;
 
 public class ArchiveFileInfo
 {

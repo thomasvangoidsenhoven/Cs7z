@@ -1,3 +1,5 @@
+using Cs7z.Core.Models;
+
 namespace Cs7z.Core;
 
 public interface ISevenZipArchive

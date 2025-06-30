@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Cs7z.Core;
 
-public class DefaultSevenZipExecutableSource : ISevenZipExecutableSource
+public class SelfHostedSevenZipExecutableSource : ISevenZipExecutableSource
 {
     private static readonly string[] PossiblePaths = new[]
     {
