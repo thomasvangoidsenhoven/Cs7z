@@ -29,7 +29,7 @@ public class SevenZipArchive : ISevenZipArchive
         Directory.CreateDirectory(destinationDirectoryName);
 
         var arguments = $"x \"{archiveFilePath}\" -o\"{destinationDirectoryName}\" -y";
-        var output = await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
+        await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
 
     public async Task CreateArchive(string archiveFilePath, string folder, CancellationToken cancellationToken = default)
@@ -50,10 +50,10 @@ public class SevenZipArchive : ISevenZipArchive
         }
 
         var arguments = $"a \"{archiveFilePath}\" \"{folder}\\*\" -r";
-        var output = await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
+        await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
 
-    public async Task<string> ListArchive(string archiveFilePath, CancellationToken cancellationToken = default)
+    public async Task<ArchiveListResult> ListArchive(string archiveFilePath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(archiveFilePath))
             throw new ArgumentException("Archive file path cannot be null or empty.", nameof(archiveFilePath));
@@ -62,7 +62,8 @@ public class SevenZipArchive : ISevenZipArchive
             throw new FileNotFoundException($"Archive file not found: {archiveFilePath}");
 
         var arguments = $"l \"{archiveFilePath}\"";
-        return await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
+        var output = await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
+        return SevenZipOutputParser.ParseListOutput(output);
     }
 
     private async Task<string> ExecuteSevenZipCommandAsync(string arguments, CancellationToken cancellationToken)
@@ -109,6 +110,7 @@ public class SevenZipArchive : ISevenZipArchive
                 $"Error: {error}. Output: {output}");
         }
 
+        SevenZipOutputValidator.ValidateOutput(output, error);
         return output;
     }
 }

@@ -8,7 +8,7 @@ const string testArchivePath = "bin.zip";
 
 var sourceLocation = new MacSevenZipExecutableSource();
 var archive = new SevenZipArchive(sourceLocation);
-//var test = await archive.ListArchive(testArchivePath);
+var listResult = await archive.ListArchive(testArchivePath);
 await archive.ExtractToDirectoryAsync(testArchivePath, "tmp");
 
 
