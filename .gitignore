@@ -406,3 +406,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 .idea
+.claude/settings.local.json
