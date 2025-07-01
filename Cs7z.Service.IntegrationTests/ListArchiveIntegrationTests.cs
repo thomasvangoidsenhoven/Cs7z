@@ -128,7 +128,7 @@ public class ListArchiveIntegrationTests : IntegrationTestBase
         await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.ListArchive(""));
         
-        await Assert.ThrowsAsync<ArgumentNullException>(
+        await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.ListArchive(null!));
     }
     

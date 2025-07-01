@@ -102,7 +102,7 @@ public class CreateArchiveIntegrationTests : IntegrationTestBase
         await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.CreateArchive(archivePath, ""));
         
-        await Assert.ThrowsAsync<ArgumentNullException>(
+        await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.CreateArchive(archivePath, null!));
     }
     
@@ -117,7 +117,7 @@ public class CreateArchiveIntegrationTests : IntegrationTestBase
         await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.CreateArchive("", sourceFolder));
         
-        await Assert.ThrowsAsync<ArgumentNullException>(
+        await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.CreateArchive(null!, sourceFolder));
     }
     

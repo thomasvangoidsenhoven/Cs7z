@@ -109,7 +109,7 @@ public class ExtractToDirectoryAsyncIntegrationTests : IntegrationTestBase
         await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.ExtractToDirectoryAsync("", extractPath));
         
-        await Assert.ThrowsAsync<ArgumentNullException>(
+        await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.ExtractToDirectoryAsync(null!, extractPath));
     }
     
@@ -125,7 +125,7 @@ public class ExtractToDirectoryAsyncIntegrationTests : IntegrationTestBase
         await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.ExtractToDirectoryAsync(archivePath, ""));
         
-        await Assert.ThrowsAsync<ArgumentNullException>(
+        await Assert.ThrowsAsync<ArgumentException>(
             () => _sevenZip.ExtractToDirectoryAsync(archivePath, null!));
     }
     

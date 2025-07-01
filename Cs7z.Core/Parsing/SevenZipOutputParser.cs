@@ -25,7 +25,7 @@ internal static class SevenZipOutputParser
     /// "2023-12-25 14:30:47 ....A          500      450           small-file.txt"
     /// </summary>
     private static readonly Regex FileLineRegex = new(
-        @"^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+([D\.])([A-Z\.]{4})\s+(\d+)\s+(\d+)?\s*([A-F0-9]{8})?\s+(.+)$",
+        @"^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+([D\.])([A-Z\.]{4})\s+(\d+)\s+(\d*)\s*(.+)$",
         RegexOptions.Compiled | RegexOptions.Multiline);
 
     /// <summary>
@@ -99,9 +99,8 @@ internal static class SevenZipOutputParser
                 var isDirectory = match.Groups[2].Value == "D";    // "D" or "."
                 var attributes = match.Groups[3].Value;            // "RHA." or "...."
                 var sizeStr = match.Groups[4].Value;               // "1024"
-                var compressedSizeStr = match.Groups[5].Value;     // "512" (optional)
-                var crc = match.Groups[6].Value;                   // "A1B2C3D4" (optional)
-                var path = match.Groups[7].Value;                  // "folder/file.txt"
+                var compressedSizeStr = match.Groups[5].Value.Trim(); // "512" (optional, may be spaces)
+                var path = match.Groups[6].Value;                  // "folder/file.txt"
 
                 if (DateTime.TryParseExact(dateTimeStr, "yyyy-MM-dd HH:mm:ss", 
                     CultureInfo.InvariantCulture, DateTimeStyles.None, out var modified) &&
@@ -119,7 +118,7 @@ internal static class SevenZipOutputParser
                         Modified = modified,
                         Attributes = isDirectory ? "D" + attributes : attributes,
                         IsDirectory = isDirectory,
-                        Crc = string.IsNullOrEmpty(crc) ? null : crc
+                        Crc = null // CRC is not always present in list output
                     };
 
                     files.Add(fileInfo);
