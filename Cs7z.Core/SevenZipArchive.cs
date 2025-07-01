@@ -51,6 +51,12 @@ public class SevenZipArchive : ISevenZipArchive
             Directory.CreateDirectory(archiveDirectory);
         }
 
+        // Delete existing archive to ensure complete replacement
+        if (File.Exists(archiveFilePath))
+        {
+            File.Delete(archiveFilePath);
+        }
+
         var arguments = $"a \"{archiveFilePath}\" \"{Path.Combine(folder, "*")}\" -r";
         await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
