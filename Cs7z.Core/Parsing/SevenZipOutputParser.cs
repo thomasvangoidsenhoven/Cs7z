@@ -1,33 +1,10 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using Cs7z.Core.Models;
 
 namespace Cs7z.Core.Parsing;
 
 internal static class SevenZipOutputParser
 {
-    /// <summary>
-    /// Regex pattern to parse 7-Zip list output lines.
-    /// 
-    /// Pattern breakdown:
-    /// ^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}) - Group 1: Date and time (e.g., "2023-12-25 14:30:45")
-    /// \s+([D\.]) - Group 2: Directory indicator ("D" for directory, "." for file)
-    /// ([A-Z\.]{4}) - Group 3: File attributes (4 chars, e.g., "RHA.", "....")
-    /// \s+(\d+) - Group 4: File size in bytes (e.g., "1024")
-    /// \s+(\d+)? - Group 5: Compressed size in bytes (optional, e.g., "512")
-    /// \s*([A-F0-9]{8})? - Group 6: CRC32 checksum (optional, 8 hex chars, e.g., "A1B2C3D4")
-    /// \s+(.+)$ - Group 7: File/directory path (e.g., "folder/file.txt")
-    /// 
-    /// Example lines this matches:
-    /// "2023-12-25 14:30:45 ....A         1024      512  A1B2C3D4  folder/file.txt"
-    /// "2023-12-25 14:30:45 D....            0        0           folder"
-    /// "2023-12-25 14:30:46 .RH..         2048     1024  E5F6G7H8  hidden-file.dat"
-    /// "2023-12-25 14:30:47 ....A          500      450           small-file.txt"
-    /// </summary>
-    private static readonly Regex FileLineRegex = new(
-        @"^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+([D\.])([A-Z\.]{4})\s+(\d+)\s+(\d*)\s*(.+)$",
-        RegexOptions.Compiled | RegexOptions.Multiline);
-
     /// <summary>
     /// Parses 7-Zip list output into structured data.
     /// 
@@ -70,18 +47,20 @@ internal static class SevenZipOutputParser
             
             // Look for the header line that starts the file listing section
             // Example: "   Date      Time    Attr         Size   Compressed  Name"
-            if (trimmedLine.StartsWith("Date") && trimmedLine.Contains("Time") && trimmedLine.Contains("Attr"))
+            if (!inFilesSection && trimmedLine.StartsWith("Date") && trimmedLine.Contains("Time") && trimmedLine.Contains("Attr"))
             {
                 inFilesSection = true;
                 continue;
             }
             
-            // Skip separator lines like "------------------- ----- ------------ ------------  ------------------------"
+            // Handle separator lines
             if (trimmedLine.StartsWith("---------------"))
             {
+                // If we're in the files section and this is the second separator, we're done
                 if (inFilesSection)
                 {
-                    inFilesSection = false; // End of files section
+                    // Don't immediately exit - there might be more content
+                    // Just skip this separator line
                 }
                 continue;
             }
@@ -92,47 +71,21 @@ internal static class SevenZipOutputParser
                 continue;
             }
 
-            var match = FileLineRegex.Match(trimmedLine);
-            if (match.Success)
+            // Try to parse the file entry line
+            var fileInfo = ParseFileLine(trimmedLine);
+            if (fileInfo != null)
             {
-                var dateTimeStr = match.Groups[1].Value;           // "2023-12-25 14:30:45"
-                var isDirectory = match.Groups[2].Value == "D";    // "D" or "."
-                var attributes = match.Groups[3].Value;            // "RHA." or "...."
-                var sizeStr = match.Groups[4].Value;               // "1024"
-                var compressedSizeStr = match.Groups[5].Value.Trim(); // "512" (optional, may be spaces)
-                var path = match.Groups[6].Value;                  // "folder/file.txt"
-
-                if (DateTime.TryParseExact(dateTimeStr, "yyyy-MM-dd HH:mm:ss", 
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var modified) &&
-                    long.TryParse(sizeStr, out var size))
+                files.Add(fileInfo);
+                
+                if (fileInfo.IsDirectory)
                 {
-                    // Use original size if compressed size is not available
-                    var compressedSize = string.IsNullOrEmpty(compressedSizeStr) ? size : 
-                        long.TryParse(compressedSizeStr, out var cs) ? cs : size;
-
-                    var fileInfo = new ArchiveFileInfo
-                    {
-                        Path = path,
-                        Size = size,
-                        CompressedSize = compressedSize,
-                        Modified = modified,
-                        Attributes = isDirectory ? "D" + attributes : attributes,
-                        IsDirectory = isDirectory,
-                        Crc = null // CRC is not always present in list output
-                    };
-
-                    files.Add(fileInfo);
-                    
-                    if (isDirectory)
-                    {
-                        totalDirectories++;
-                    }
-                    else
-                    {
-                        totalFiles++;
-                        totalSize += size;
-                        totalCompressedSize += compressedSize;
-                    }
+                    totalDirectories++;
+                }
+                else
+                {
+                    totalFiles++;
+                    totalSize += fileInfo.Size;
+                    totalCompressedSize += fileInfo.CompressedSize;
                 }
             }
         }
@@ -145,5 +98,191 @@ internal static class SevenZipOutputParser
             TotalSize = totalSize,
             TotalCompressedSize = totalCompressedSize
         };
+    }
+
+    /// <summary>
+    /// Parses a single file entry line from 7-Zip output.
+    /// Expected format: "2023-12-25 14:30:45 ....A         1024          512  folder/file.txt"
+    /// </summary>
+    private static ArchiveFileInfo? ParseFileLine(string line)
+    {
+        // Minimum length check - a valid line should have at least date, time, attributes, size, and name
+        if (line.Length < 40)
+            return null;
+
+        // Skip summary lines - these have spaces where attributes should be
+        // Summary line example: "2025-07-02 22:17:00                 72           96  3 files"
+        // Real file/dir line:   "2023-12-25 14:30:45 D....            0            0  folder"
+        // Check if position 20-24 (where attributes should be) contains only spaces
+        if (line.Length > 24 && line.Substring(20, 5).Trim().Length == 0)
+        {
+            // This is likely a summary line
+            return null;
+        }
+
+        try
+        {
+            // Parse date and time (first 19 characters: "2023-12-25 14:30:45")
+            if (!TryParseDateTime(line, out var dateTime, out var nextPos))
+                return null;
+
+            // Skip whitespace after datetime
+            nextPos = SkipWhitespace(line, nextPos);
+            if (nextPos >= line.Length)
+                return null;
+
+            // Parse attributes (5 characters: "D...." or "....A")
+            if (!TryParseAttributes(line, nextPos, out var isDirectory, out var attributes, out nextPos))
+                return null;
+
+            // Skip whitespace after attributes
+            nextPos = SkipWhitespace(line, nextPos);
+            if (nextPos >= line.Length)
+                return null;
+
+            // Parse size
+            if (!TryParseNumber(line, nextPos, out var size, out nextPos))
+                return null;
+
+            // Skip whitespace after size
+            nextPos = SkipWhitespace(line, nextPos);
+            if (nextPos >= line.Length)
+                return null;
+
+            // Parse compressed size (optional - might be missing for some entries)
+            long compressedSize = size; // Default to original size
+            var savedPos = nextPos;
+            
+            // Try to parse compressed size, but if we can't, assume the rest is the filename
+            if (TryParseNumber(line, nextPos, out var parsedCompressedSize, out var afterCompressedPos))
+            {
+                // Check if there's still content after (should be the filename)
+                var afterWhitespace = SkipWhitespace(line, afterCompressedPos);
+                if (afterWhitespace < line.Length)
+                {
+                    compressedSize = parsedCompressedSize;
+                    nextPos = afterWhitespace;
+                }
+                else
+                {
+                    // No filename after, so this number is probably part of the filename
+                    nextPos = savedPos;
+                }
+            }
+
+            // The rest of the line is the file path (may contain spaces)
+            var path = line.Substring(nextPos).Trim();
+            if (string.IsNullOrEmpty(path))
+                return null;
+
+            return new ArchiveFileInfo
+            {
+                Path = path,
+                Size = size,
+                CompressedSize = compressedSize,
+                Modified = dateTime,
+                Attributes = attributes,
+                IsDirectory = isDirectory,
+                Crc = null // CRC is not always present in list output
+            };
+        }
+        catch
+        {
+            // If any parsing error occurs, skip this line
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Tries to parse the date and time from the beginning of the line.
+    /// Expected format: "2023-12-25 14:30:45"
+    /// </summary>
+    private static bool TryParseDateTime(string line, out DateTime dateTime, out int nextPosition)
+    {
+        dateTime = default;
+        nextPosition = 0;
+
+        // Date time format is exactly 19 characters: "2023-12-25 14:30:45"
+        if (line.Length < 19)
+            return false;
+
+        var dateTimeStr = line.Substring(0, 19);
+        if (DateTime.TryParseExact(dateTimeStr, "yyyy-MM-dd HH:mm:ss", 
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+        {
+            nextPosition = 19;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to parse the attributes field.
+    /// Expected format: "D...." for directories or "....A" for files (5 characters)
+    /// </summary>
+    private static bool TryParseAttributes(string line, int startPos, out bool isDirectory, 
+        out string attributes, out int nextPosition)
+    {
+        isDirectory = false;
+        attributes = string.Empty;
+        nextPosition = startPos;
+
+        // Need at least 5 characters for attributes
+        if (startPos + 5 > line.Length)
+            return false;
+
+        var attrStr = line.Substring(startPos, 5);
+        
+        // First character indicates if it's a directory
+        isDirectory = attrStr[0] == 'D';
+        
+        // The attributes field is exactly 5 characters
+        attributes = attrStr;
+        
+        nextPosition = startPos + 5;
+        return true;
+    }
+
+    /// <summary>
+    /// Tries to parse a number (size or compressed size) from the line.
+    /// </summary>
+    private static bool TryParseNumber(string line, int startPos, out long number, out int nextPosition)
+    {
+        number = 0;
+        nextPosition = startPos;
+
+        // Find the end of the number
+        int endPos = startPos;
+        while (endPos < line.Length && char.IsDigit(line[endPos]))
+        {
+            endPos++;
+        }
+
+        // No digits found
+        if (endPos == startPos)
+            return false;
+
+        var numberStr = line.Substring(startPos, endPos - startPos);
+        if (long.TryParse(numberStr, out number))
+        {
+            nextPosition = endPos;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Skips whitespace characters and returns the position of the next non-whitespace character.
+    /// </summary>
+    private static int SkipWhitespace(string line, int startPos)
+    {
+        int pos = startPos;
+        while (pos < line.Length && char.IsWhiteSpace(line[pos]))
+        {
+            pos++;
+        }
+        return pos;
     }
 }

@@ -49,9 +49,6 @@ dotnet test --filter "FullyQualifiedName~ExtractToDirectoryAsync"
 dotnet test -v n
 ```
 
-### Run on specific platform
-Platform-specific tests will automatically skip on incompatible platforms.
-
 ## Test Data
 
 Tests create temporary files and archives in the system temp directory. All test data is automatically cleaned up after test execution.
