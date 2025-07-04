@@ -36,6 +36,11 @@ public class SevenZipArchive : ISevenZipArchive
 
     public async Task CreateArchive(string archiveFilePath, string folder, CancellationToken cancellationToken = default)
     {
+        await CreateArchive(archiveFilePath, folder, CompressionLevel.Normal, cancellationToken);
+    }
+
+    public async Task CreateArchive(string archiveFilePath, string folder, CompressionLevel compressionLevel, CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(archiveFilePath))
             throw new ArgumentException("Archive file path cannot be null or empty.", nameof(archiveFilePath));
         
@@ -57,7 +62,7 @@ public class SevenZipArchive : ISevenZipArchive
             File.Delete(archiveFilePath);
         }
 
-        var arguments = $"a \"{archiveFilePath}\" \"{Path.Combine(folder, "*")}\" -r";
+        var arguments = $"a \"{archiveFilePath}\" \"{Path.Combine(folder, "*")}\" -r -mx{(int)compressionLevel}";
         await ExecuteSevenZipCommandAsync(arguments, cancellationToken);
     }
 

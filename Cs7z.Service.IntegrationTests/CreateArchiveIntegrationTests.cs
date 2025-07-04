@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Cs7z.Core;
+using Cs7z.Core.Models;
 using Cs7z.Service.OmniPlatform;
 using Xunit;
 
@@ -215,5 +216,118 @@ public class CreateArchiveIntegrationTests : IntegrationTestBase
         Assert.True(File.Exists(Path.Combine(extractPath, "file-with-dashes.txt")));
         Assert.True(File.Exists(Path.Combine(extractPath, "file_with_underscores.txt")));
         Assert.True(File.Exists(Path.Combine(extractPath, "文件.txt")));
+    }
+    
+    [Fact]
+    public async Task CreateArchive_WithDifferentCompressionLevels_CreatesArchivesWithDifferentSizes()
+    {
+        // Arrange
+        var sourceFolder = GetTestFilePath("compression_test");
+        
+        // Create test files with compressible content
+        var content = string.Join("\n", Enumerable.Repeat("This is a test line that should compress well.", 1000));
+        CreateTestFile("compression_test/file1.txt", content);
+        CreateTestFile("compression_test/file2.txt", content);
+        CreateTestFile("compression_test/file3.txt", content);
+        
+        var storeArchive = GetOutputPath("store.7z");
+        var normalArchive = GetOutputPath("normal.7z");
+        var ultraArchive = GetOutputPath("ultra.7z");
+        
+        // Act
+        await _sevenZip.CreateArchive(storeArchive, sourceFolder, CompressionLevel.Store);
+        await _sevenZip.CreateArchive(normalArchive, sourceFolder, CompressionLevel.Normal);
+        await _sevenZip.CreateArchive(ultraArchive, sourceFolder, CompressionLevel.Ultra);
+        
+        // Assert
+        var storeSize = new FileInfo(storeArchive).Length;
+        var normalSize = new FileInfo(normalArchive).Length;
+        var ultraSize = new FileInfo(ultraArchive).Length;
+        
+        // Store should be larger than Normal
+        Assert.True(storeSize > normalSize, 
+            $"Store size ({storeSize}) should be larger than Normal size ({normalSize})");
+        
+        // Normal should be larger than Ultra
+        Assert.True(normalSize > ultraSize, 
+            $"Normal size ({normalSize}) should be larger than Ultra size ({ultraSize})");
+        
+        // Verify all archives extract correctly
+        var extractStore = GetOutputPath("extract_store");
+        var extractNormal = GetOutputPath("extract_normal");
+        var extractUltra = GetOutputPath("extract_ultra");
+        
+        await _sevenZip.ExtractToDirectoryAsync(storeArchive, extractStore);
+        await _sevenZip.ExtractToDirectoryAsync(normalArchive, extractNormal);
+        await _sevenZip.ExtractToDirectoryAsync(ultraArchive, extractUltra);
+        
+        // Verify content is identical
+        foreach (var file in new[] { "file1.txt", "file2.txt", "file3.txt" })
+        {
+            var storeContent = await File.ReadAllTextAsync(Path.Combine(extractStore, file));
+            var normalContent = await File.ReadAllTextAsync(Path.Combine(extractNormal, file));
+            var ultraContent = await File.ReadAllTextAsync(Path.Combine(extractUltra, file));
+            
+            Assert.Equal(content, storeContent);
+            Assert.Equal(content, normalContent);
+            Assert.Equal(content, ultraContent);
+        }
+    }
+    
+    [Theory]
+    [InlineData(CompressionLevel.Store)]
+    [InlineData(CompressionLevel.Fastest)]
+    [InlineData(CompressionLevel.Fast)]
+    [InlineData(CompressionLevel.Normal)]
+    [InlineData(CompressionLevel.Maximum)]
+    [InlineData(CompressionLevel.Ultra)]
+    public async Task CreateArchive_WithEachCompressionLevel_CreatesValidArchive(CompressionLevel compressionLevel)
+    {
+        // Arrange
+        var sourceFolder = GetTestFilePath($"level_{compressionLevel}");
+        CreateTestFile($"level_{compressionLevel}/test.txt", $"Testing compression level {compressionLevel}");
+        
+        var archivePath = GetOutputPath($"level_{compressionLevel}.7z");
+        
+        // Act
+        await _sevenZip.CreateArchive(archivePath, sourceFolder, compressionLevel);
+        
+        // Assert
+        Assert.True(File.Exists(archivePath));
+        Assert.True(new FileInfo(archivePath).Length > 0);
+        
+        // Verify extraction
+        var extractPath = GetOutputPath($"extract_{compressionLevel}");
+        await _sevenZip.ExtractToDirectoryAsync(archivePath, extractPath);
+        
+        var extractedContent = await File.ReadAllTextAsync(Path.Combine(extractPath, "test.txt"));
+        Assert.Equal($"Testing compression level {compressionLevel}", extractedContent);
+    }
+    
+    [Fact]
+    public async Task CreateArchive_EmptyFolderWithDifferentCompressionLevels_CreatesConsistentArchives()
+    {
+        // Arrange
+        var emptyFolder = GetTestFilePath("empty_compression");
+        CreateTestDirectory("empty_compression");
+        
+        var storeArchive = GetOutputPath("empty_store.7z");
+        var ultraArchive = GetOutputPath("empty_ultra.7z");
+        
+        // Act
+        await _sevenZip.CreateArchive(storeArchive, emptyFolder, CompressionLevel.Store);
+        await _sevenZip.CreateArchive(ultraArchive, emptyFolder, CompressionLevel.Ultra);
+        
+        // Assert - Empty archives should have similar sizes regardless of compression level
+        var storeSize = new FileInfo(storeArchive).Length;
+        var ultraSize = new FileInfo(ultraArchive).Length;
+        
+        Assert.True(storeSize > 0);
+        Assert.True(ultraSize > 0);
+        
+        // The difference should be minimal for empty archives
+        var sizeDifference = Math.Abs(storeSize - ultraSize);
+        Assert.True(sizeDifference < 1000, 
+            $"Size difference ({sizeDifference}) should be minimal for empty archives");
     }
 }
