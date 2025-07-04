@@ -7,11 +7,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Source\Linux\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Update="Source\Linux\7zz">
+      <!-- x86 Architecture -->
+      <None Update="Source\Linux\x86\7zz">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      
+      <!-- x64 Architecture -->
+      <None Update="Source\Linux\x64\7zz">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      
+      <!-- ARM Architecture -->
+      <None Update="Source\Linux\arm\7zz">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      
+      <!-- ARM64 Architecture -->
+      <None Update="Source\Linux\arm64\7zz">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

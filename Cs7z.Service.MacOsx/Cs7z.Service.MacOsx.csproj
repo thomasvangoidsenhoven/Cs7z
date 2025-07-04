@@ -7,7 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Update="Source\osx\7zz">
+      <!-- x64 Architecture -->
+      <None Update="Source\osx\x64\7zz">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      
+      <!-- ARM64 Architecture -->
+      <None Update="Source\osx\arm64\7zz">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
