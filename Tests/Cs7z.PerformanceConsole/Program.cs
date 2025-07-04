@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using Cs7z.Core;
+using Cs7z.Core.Models;
 using Cs7z.Service.OmniPlatform;
 
 namespace Cs7z.PerformanceConsole;
@@ -42,7 +43,7 @@ class Program
                 var executableSource = new OmniPlatformSevenZipExecutableSource();
                 var sevenZipArchive = new SevenZipArchive(executableSource);
                 
-                // Test SevenZip Create
+                // Test SevenZip Create (default Normal compression)
                 Console.Write("  SevenZip Create: ");
                 var sevenZipPath = Path.Combine(tempPath, "test.7z");
                 sw.Restart();
@@ -50,13 +51,48 @@ class Program
                 sw.Stop();
                 result.SevenZipCreate = sw.ElapsedMilliseconds;
                 result.SevenZipFileSize = new FileInfo(sevenZipPath).Length;
+                result.SevenZipCreateNormal = result.SevenZipCreate; // Normal is the default
+                result.SevenZipFileSizeNormal = result.SevenZipFileSize;
                 Console.WriteLine($"{result.SevenZipCreate} ms ({FormatFileSize(result.SevenZipFileSize)})");
+                
+                // Test SevenZip with different compression levels
+                Console.WriteLine("  Testing compression levels:");
+                
+                // Store (no compression)
+                Console.Write("    - Store: ");
+                var sevenZipStorePath = Path.Combine(tempPath, "test_store.7z");
+                sw.Restart();
+                await sevenZipArchive.CreateArchive(sevenZipStorePath, sourceDataPath, Cs7z.Core.Models.CompressionLevel.Store);
+                sw.Stop();
+                result.SevenZipCreateStore = sw.ElapsedMilliseconds;
+                result.SevenZipFileSizeStore = new FileInfo(sevenZipStorePath).Length;
+                Console.WriteLine($"{result.SevenZipCreateStore} ms ({FormatFileSize(result.SevenZipFileSizeStore)})");
+                
+                // Fastest
+                Console.Write("    - Fastest: ");
+                var sevenZipFastestPath = Path.Combine(tempPath, "test_fastest.7z");
+                sw.Restart();
+                await sevenZipArchive.CreateArchive(sevenZipFastestPath, sourceDataPath, Cs7z.Core.Models.CompressionLevel.Fastest);
+                sw.Stop();
+                result.SevenZipCreateFastest = sw.ElapsedMilliseconds;
+                result.SevenZipFileSizeFastest = new FileInfo(sevenZipFastestPath).Length;
+                Console.WriteLine($"{result.SevenZipCreateFastest} ms ({FormatFileSize(result.SevenZipFileSizeFastest)})");
+                
+                // Ultra
+                Console.Write("    - Ultra: ");
+                var sevenZipUltraPath = Path.Combine(tempPath, "test_ultra.7z");
+                sw.Restart();
+                await sevenZipArchive.CreateArchive(sevenZipUltraPath, sourceDataPath, Cs7z.Core.Models.CompressionLevel.Ultra);
+                sw.Stop();
+                result.SevenZipCreateUltra = sw.ElapsedMilliseconds;
+                result.SevenZipFileSizeUltra = new FileInfo(sevenZipUltraPath).Length;
+                Console.WriteLine($"{result.SevenZipCreateUltra} ms ({FormatFileSize(result.SevenZipFileSizeUltra)})");
                 
                 // Test ZipArchive Create
                 Console.Write("  ZipArchive Create: ");
                 var zipPath = Path.Combine(tempPath, "test.zip");
                 sw.Restart();
-                ZipFile.CreateFromDirectory(sourceDataPath, zipPath, CompressionLevel.Optimal, false);
+                ZipFile.CreateFromDirectory(sourceDataPath, zipPath, System.IO.Compression.CompressionLevel.Optimal, false);
                 sw.Stop();
                 result.ZipArchiveCreate = sw.ElapsedMilliseconds;
                 result.ZipArchiveFileSize = new FileInfo(zipPath).Length;
@@ -135,6 +171,46 @@ class Program
             
             Console.WriteLine($"{result.SizeMB,4} | {FormatFileSize(result.SevenZipFileSize),13} | {FormatFileSize(result.ZipArchiveFileSize),13} | {FormatFileSize(result.ZipArchiveStreamFileSize),13} | 7z: {sevenZipRatio:F1}% Zip: {zipRatio:F1}%");
         }
+        
+        // Display compression level comparison
+        Console.WriteLine("\n=== 7-Zip Compression Level Comparison ===");
+        Console.WriteLine("\nTiming (milliseconds):");
+        Console.WriteLine("Size | Store | Fastest | Normal | Ultra | Speed Gain (Store vs Ultra)");
+        Console.WriteLine("-----|-------|---------|--------|-------|----------------------------");
+        
+        foreach (var result in results)
+        {
+            var speedGain = result.SevenZipCreateUltra > 0 
+                ? $"{(double)result.SevenZipCreateStore / result.SevenZipCreateUltra:F1}x faster" 
+                : "N/A";
+            Console.WriteLine($"{result.SizeMB,4} | {result.SevenZipCreateStore,5} | {result.SevenZipCreateFastest,7} | {result.SevenZipCreateNormal,6} | {result.SevenZipCreateUltra,5} | {speedGain}");
+        }
+        
+        Console.WriteLine("\nFile Sizes and Compression Ratios:");
+        Console.WriteLine("Size | Store       | Fastest     | Normal      | Ultra       | Size Reduction (Store→Ultra)");
+        Console.WriteLine("-----|-------------|-------------|-------------|-------------|----------------------------");
+        
+        foreach (var result in results)
+        {
+            var originalSize = result.SizeMB * 1024L * 1024L;
+            var storeRatio = (1.0 - (double)result.SevenZipFileSizeStore / originalSize) * 100;
+            var fastestRatio = (1.0 - (double)result.SevenZipFileSizeFastest / originalSize) * 100;
+            var normalRatio = (1.0 - (double)result.SevenZipFileSizeNormal / originalSize) * 100;
+            var ultraRatio = (1.0 - (double)result.SevenZipFileSizeUltra / originalSize) * 100;
+            
+            var sizeReduction = result.SevenZipFileSizeStore > 0 
+                ? $"{(1.0 - (double)result.SevenZipFileSizeUltra / result.SevenZipFileSizeStore) * 100:F1}%"
+                : "N/A";
+            
+            Console.WriteLine($"{result.SizeMB,4} | {FormatFileSize(result.SevenZipFileSizeStore),-11} | {FormatFileSize(result.SevenZipFileSizeFastest),-11} | {FormatFileSize(result.SevenZipFileSizeNormal),-11} | {FormatFileSize(result.SevenZipFileSizeUltra),-11} | {sizeReduction}");
+            Console.WriteLine($"     | ({storeRatio,4:F1}%)     | ({fastestRatio,4:F1}%)     | ({normalRatio,4:F1}%)     | ({ultraRatio,4:F1}%)     |");
+        }
+        
+        Console.WriteLine("\nCompression Trade-offs:");
+        Console.WriteLine("- Store: Fastest but no compression (good for already compressed files)");
+        Console.WriteLine("- Fastest: Quick compression with reasonable size reduction");
+        Console.WriteLine("- Normal: Balanced speed and compression (default)");
+        Console.WriteLine("- Ultra: Best compression but significantly slower");
         
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
@@ -238,7 +314,7 @@ class Program
         foreach (var file in files)
         {
             var entryName = Path.Combine(entryPrefix, Path.GetFileName(file));
-            var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+            var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.Optimal);
             
             using var entryStream = entry.Open();
             using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
@@ -293,4 +369,14 @@ class PerformanceResult
     public long SevenZipFileSize { get; set; }
     public long ZipArchiveFileSize { get; set; }
     public long ZipArchiveStreamFileSize { get; set; }
+    
+    // Compression level specific properties
+    public long SevenZipCreateStore { get; set; }
+    public long SevenZipCreateFastest { get; set; }
+    public long SevenZipCreateNormal { get; set; }
+    public long SevenZipCreateUltra { get; set; }
+    public long SevenZipFileSizeStore { get; set; }
+    public long SevenZipFileSizeFastest { get; set; }
+    public long SevenZipFileSizeNormal { get; set; }
+    public long SevenZipFileSizeUltra { get; set; }
 }

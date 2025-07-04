@@ -18,7 +18,7 @@ public class ArchiveCompressionBenchmarks
     private string _zipArchivePath = null!;
     private ISevenZipArchive _sevenZipArchive = null!;
     
-    [Params(1, 10, 100, 500, 1000, 3000)] // Different data sizes: 1MB, 10MB, 100MB
+    [Params(1, 10, 100, 500, 1000)] // Different data sizes: 1MB, 10MB, 100MB
     public int DataSizeMB { get; set; }
 
     [GlobalSetup]
