@@ -12,21 +12,51 @@ A high-performance, cross-platform .NET 9 wrapper for 7-zip compression with aut
 - 📦 **Self-Contained** - No external 7-zip installation required
 - 🔧 **Zero Dependencies** - Core library has no third-party dependencies
 
-## Performance
+## Performance Benchmarks
 
-Cs7z leverages the power of 7-zip to provide superior compression ratios compared to System.IO.Compression, especially for larger files:
+Cs7z leverages the power of 7-zip to provide superior compression ratios compared to System.IO.Compression. Below are comprehensive benchmarks showing performance across different file sizes and compression levels.
 
-### Compression Performance (1GB Dataset)
-| Method | Time | File Size | Compression Ratio |
-|--------|------|-----------|------------------|
-| **Cs7z (Normal)** | 27.2s | 341 MB | 66.7% |
-| System.IO.Compression | 12.2s | 512 MB | 50.0% |
+### Compression Speed Comparison
 
-### Extraction Performance (1GB Dataset)
-| Method | Time |
-|--------|------|
-| **Cs7z** | 548ms |
-| System.IO.Compression | 602ms |
+| File Size | Cs7z Store | Cs7z Fastest | Cs7z Normal | Cs7z Ultra | ZipArchive |
+|-----------|------------|--------------|-------------|------------|------------|
+| 1 MB      | **17ms**   | 56ms         | 181ms       | 45ms       | 16ms       | 
+| 10 MB     | **21ms**   | 76ms         | 495ms       | 488ms      | 122ms      | 
+| 100 MB    | **46ms**   | 428ms        | 7,086ms     | 7,255ms    | 1,203ms    | 
+| 500 MB    | **441ms**  | 1,971ms      | 20,016ms    | 32,555ms   | 6,459ms    | 
+
+### Compression Ratio Comparison
+
+| File Size | Original | Cs7z Store | Cs7z Fastest | Cs7z Normal | Cs7z Ultra | ZipArchive | 
+|-----------|----------|------------|--------------|-------------|------------|------------|
+| 1 MB      | 1.00 MB  | 1.14 MB    | 1.00 MB      | **1.00 MB** | **1.00 MB** | 1.03 MB    |
+| 10 MB     | 10.00 MB | 10.14 MB   | 8.34 MB      | 8.16 MB     | **8.16 MB** | 8.44 MB    |
+| 100 MB    | 100.00 MB| 100.15 MB  | 72.62 MB     | 66.99 MB    | **66.98 MB**| 72.31 MB   |
+| 500 MB    | 500.00 MB| 500.15 MB  | 358.58 MB    | 328.79 MB   | **328.65 MB**| 356.61 MB  | 
+
+### Extraction Speed Comparison
+
+| File Size | Cs7z Extract | ZipArchive Extract |
+|-----------|--------------|-------------------|
+| 1 MB      | 22ms         | **3ms**           |
+| 10 MB     | 29ms         | **10ms**          |
+| 100 MB    | **106ms**    | 59ms              |
+| 500 MB    | **256ms**    | 251ms             | 
+
+### Key Insights
+
+- **Cs7z Store** (no compression) is the fastest compression option, ideal for already-compressed files
+- **Cs7z Ultra** achieves the best compression ratios, saving 7-8% more space than ZipArchive on larger files
+- **ZipArchive** offers faster extraction for small files but similar performance for large files
+- **Cs7z Normal** provides excellent compression with reasonable speed for medium to large files
+- For files over 100MB, Cs7z provides significantly better compression with minimal extraction time penalty
+
+### Quick Reference: Choosing a Compression Level
+
+- **Need speed?** → Use `CompressionLevel.Store` (46ms for 100MB)
+- **Balanced?** → Use `CompressionLevel.Normal` (7s for 100MB, 33% compression)
+- **Maximum compression?** → Use `CompressionLevel.Ultra` (7.3s for 100MB, 33% compression)
+- **Small files < 10MB?** → Consider using System.IO.Compression instead
 
 *Benchmarks performed on Apple M4 Pro with .NET 9.0*
 
@@ -94,22 +124,38 @@ services.AddTransient<ISevenZipArchive, SevenZipArchive>();
 
 ## Compression Levels
 
-Cs7z offers 6 compression levels to balance speed and file size:
+Cs7z offers 6 compression levels to balance speed and file size. Here's how they perform on a 100MB dataset:
 
-| Level | Speed | Compression | Use Case |
-|-------|-------|-------------|----------|
-| **Store** | Fastest | None (0%) | Already compressed files |
-| **Fastest** | Very Fast | Low (~40%) | Quick archiving |
-| **Fast** | Fast | Medium (~50%) | General use with speed priority |
-| **Normal** | Balanced | Good (~65%) | Default, balanced option |
-| **Maximum** | Slow | High (~70%) | Size priority |
-| **Ultra** | Slowest | Best (~75%+) | Maximum compression |
+| Level | Speed | File Size | Compression Ratio | Use Case |
+|-------|-------|-----------|-------------------|----------|
+| **Store** | 46ms (fastest) | 100.15 MB | 0% | Already compressed files, archives |
+| **Fastest** | 428ms | 72.62 MB | 27.4% | Quick archiving with some compression |
+| **Fast** | ~2s* | ~70 MB* | ~30%* | General use with speed priority |
+| **Normal** | 7.1s | 66.99 MB | 33.0% | Default, balanced option |
+| **Maximum** | ~7s* | ~67 MB* | ~33%* | Size priority over speed |
+| **Ultra** | 7.3s | 66.98 MB | 33.0% | Maximum compression |
 
-Example with compression level:
+*Estimated based on compression patterns
+
+### Compression Level Examples
 
 ```csharp
-await archive.CreateArchive("output.7z", "folder", CompressionLevel.Ultra);
+// Fastest compression for temporary files
+await archive.CreateArchive("temp.7z", "folder", CompressionLevel.Store);
+
+// Balanced compression (default)
+await archive.CreateArchive("output.7z", "folder", CompressionLevel.Normal);
+
+// Maximum compression for long-term storage
+await archive.CreateArchive("archive.7z", "folder", CompressionLevel.Ultra);
 ```
+
+### When to Use Each Level
+
+- **Store**: ZIP files, images, videos, or when speed is critical
+- **Fastest**: Log files, temporary backups, or quick transfers
+- **Normal**: General purpose archiving (default if not specified)
+- **Ultra**: Final backups, long-term storage, or distribution packages
 
 ## Platform Support
 
@@ -150,15 +196,18 @@ FROM mcr.microsoft.com/dotnet/runtime:9.0
 ## When to Use Cs7z
 
 ### Use Cs7z when you need:
-- **Maximum compression** - 7-zip typically achieves 20-50% better compression than ZIP
-- **Large file handling** - Excellent performance with multi-gigabyte archives
+- **Maximum compression** - Saves 7-8% more space than ZIP on files over 100MB
+- **Large file handling** - Superior compression ratios with competitive extraction speeds
+- **Fast archiving without compression** - Store mode is faster than ZipArchive for 10MB+ files
 - **Cross-platform support** - Same compression format across all platforms
-- **Advanced features** - Support for various archive formats beyond ZIP
+- **Flexible compression options** - 6 levels from no compression to maximum
 
 ### Use System.IO.Compression when you need:
-- **Simpler deployment** - No extra bundled 7z binaries
-- **Smaller datasets** - Built-in compression is faster for small files
+- **Small files (< 10MB)** - ZipArchive is faster for both compression and extraction
+- **Fastest extraction speed** - ZipArchive extracts 3-7x faster on small files
+- **Simpler deployment** - No external binaries to manage
 - **Stream-based processing** - Direct stream manipulation without temp files
+- **Maximum compatibility** - ZIP format is universally supported
 
 ## Architecture
 
