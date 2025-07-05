@@ -8,23 +8,23 @@ Cs7z is a .NET 9 C# library that provides a cross-platform wrapper around the 7-
 
 ## Solution Structure
 
-The solution contains 11 projects organized into core functionality, platform-specific services, and test projects:
+The solution file is `Cs7z.Archiving.sln` and contains 11 projects organized into core functionality, platform-specific services, and test projects:
 
 ### Core Projects
-- **Cs7z.Core**: Main library with `ISevenZipArchive` interface and `SevenZipArchive` implementation
-- **Cs7z.Console**: Console application demonstrating library usage
+- **Cs7z.Archiving.Core**: Main library with `ISevenZipArchive` interface and `SevenZipArchive` implementation
+- **Cs7z.Archiving.Console**: Console application demonstrating library usage
 
 ### Platform Services
-- **Cs7z.Service.Windows**: Windows-specific implementation with x86/x64/ARM64 7za.exe binaries
-- **Cs7z.Service.Linux**: Linux-specific executable handling
-- **Cs7z.Service.MacOsx**: macOS-specific executable handling
-- **Cs7z.Service.OmniPlatform**: Cross-platform abstraction that auto-selects the appropriate platform
+- **Cs7z.Archiving.Service.Windows**: Windows-specific implementation with x86/x64/ARM64 7za.exe binaries
+- **Cs7z.Archiving.Service.Linux**: Linux-specific executable handling with x86/x64/ARM/ARM64 7zz binaries
+- **Cs7z.Archiving.Service.MacOsx**: macOS-specific executable handling with x64/ARM64 7zz binaries
+- **Cs7z.Archiving.Service.OmniPlatform**: Cross-platform abstraction that auto-selects the appropriate platform
 
 ### Test Projects
-- **Tests/Cs7z.Core.Tests**: Unit tests with xUnit and Moq
-- **Cs7z.Service.IntegrationTests**: Integration tests for actual 7-zip operations
-- **Tests/Cs7z.Benchmarks**: BenchmarkDotNet performance tests
-- **Tests/Cs7z.PerformanceConsole**: Performance testing console app
+- **Tests/Cs7z.Archiving.Core.Tests**: Unit tests with xUnit and Moq
+- **Cs7z.Archiving.Service.IntegrationTests**: Integration tests for actual 7-zip operations
+- **Tests/Cs7z.Archiving.Benchmarks**: BenchmarkDotNet performance tests
+- **Tests/Cs7z.Archiving.PerformanceConsole**: Performance testing console app
 
 ## Common Commands
 
@@ -34,7 +34,7 @@ The solution contains 11 projects organized into core functionality, platform-sp
 dotnet build
 
 # Run console application
-dotnet run --project Cs7z.Console
+dotnet run --project Cs7z.Archiving.Console
 
 # Build in Release mode
 dotnet build --configuration Release
@@ -52,8 +52,8 @@ dotnet restore
 dotnet test
 
 # Run specific test project
-dotnet test Tests/Cs7z.Core.Tests/Cs7z.Core.Tests.csproj
-dotnet test Cs7z.Service.IntegrationTests/Cs7z.Service.IntegrationTests.csproj
+dotnet test Tests/Cs7z.Archiving.Core.Tests/Cs7z.Archiving.Core.Tests.csproj
+dotnet test Cs7z.Archiving.Service.IntegrationTests/Cs7z.Archiving.Service.IntegrationTests.csproj
 
 # Run tests with verbose output
 dotnet test -v n
@@ -69,10 +69,10 @@ dotnet test /p:CollectCoverage=true
 ### Benchmarking
 ```bash
 # Run benchmarks (must be in Release mode)
-dotnet run --project Tests/Cs7z.Benchmarks/Cs7z.Benchmarks.csproj -c Release
+dotnet run --project Tests/Cs7z.Archiving.Benchmarks/Cs7z.Archiving.Benchmarks.csproj -c Release
 
 # Run performance console
-dotnet run --project Tests/Cs7z.PerformanceConsole/Cs7z.PerformanceConsole.csproj
+dotnet run --project Tests/Cs7z.Archiving.PerformanceConsole/Cs7z.Archiving.PerformanceConsole.csproj
 ```
 
 ### Code Quality
@@ -91,15 +91,15 @@ dotnet build -p:EnableNETAnalyzers=true
 
 ### Core Design
 The library follows a clean architecture pattern with:
-- **Interfaces** in Cs7z.Core defining contracts (`ISevenZipArchive`, `ISevenZipExecutableSource`)
+- **Interfaces** in Cs7z.Archiving.Core defining contracts (`ISevenZipArchive`, `ISevenZipExecutableSource`)
 - **Platform-specific implementations** in separate service projects
 - **OmniPlatform service** that uses `RuntimeInformation` to automatically select the correct platform implementation
 
 ### Key Components
 1. **SevenZipArchive**: Main class providing async methods for:
    - `ExtractToDirectoryAsync()` - Extract archives
-   - `CreateFromDirectoryAsync()` - Create archives
-   - `ListContentsAsync()` - List archive contents with detailed file info
+   - `CreateArchive()` - Create archives with optional compression level
+   - `ListArchive()` - List archive contents with detailed file info
 
 2. **SevenZipExecutableSource**: Platform-specific classes that provide the path to the 7-zip executable
 
@@ -122,6 +122,6 @@ All operations use `System.Diagnostics.Process` with:
 
 ## Current Status
 
-- Active development on `feature/MultiArchitectureSupport` branch
 - Main branch for PRs: `main`
-- Recent work includes integration tests and multi-architecture support
+- All projects use the `Cs7z.Archiving` namespace
+- Recent work includes multi-architecture support, compression levels, and performance benchmarks
