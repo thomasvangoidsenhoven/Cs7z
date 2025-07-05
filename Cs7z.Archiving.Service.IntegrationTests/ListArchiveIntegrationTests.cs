@@ -38,7 +38,9 @@ public class ListArchiveIntegrationTests : IntegrationTestBase
         // Verify all files are listed
         foreach (var file in files.Keys)
         {
-            Assert.Contains(result.Files, f => f.Path.Contains(file));
+            // Use platform-agnostic path comparison
+            Assert.Contains(result.Files, f => 
+                f.Path.Replace('\\', '/').Contains(file.Replace('\\', '/')));
         }
     }
     
@@ -60,7 +62,9 @@ public class ListArchiveIntegrationTests : IntegrationTestBase
         // Verify all files are listed
         foreach (var file in files.Keys)
         {
-            Assert.Contains(result.Files, f => f.Path.Contains(file));
+            // Use platform-agnostic path comparison
+            Assert.Contains(result.Files, f => 
+                f.Path.Replace('\\', '/').Contains(file.Replace('\\', '/')));
         }
     }
     
@@ -211,10 +215,10 @@ public class ListArchiveIntegrationTests : IntegrationTestBase
         Assert.NotNull(result);
         Assert.Equal(files.Count, result.TotalFiles);
         
-        // Verify all files with special characters are listed
-        Assert.Contains(result.Files, f => f.Path.Contains("file with spaces.txt"));
-        Assert.Contains(result.Files, f => f.Path.Contains("file-with-dashes.txt"));
-        Assert.Contains(result.Files, f => f.Path.Contains("file_with_underscores.txt"));
-        Assert.Contains(result.Files, f => f.Path.Contains("文件.txt"));
+        // Verify all files with special characters are listed (platform-agnostic)
+        Assert.Contains(result.Files, f => Path.GetFileName(f.Path) == "file with spaces.txt");
+        Assert.Contains(result.Files, f => Path.GetFileName(f.Path) == "file-with-dashes.txt");
+        Assert.Contains(result.Files, f => Path.GetFileName(f.Path) == "file_with_underscores.txt");
+        Assert.Contains(result.Files, f => Path.GetFileName(f.Path) == "文件.txt");
     }
 }
