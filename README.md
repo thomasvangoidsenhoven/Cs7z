@@ -16,47 +16,72 @@ A high-performance, cross-platform .NET 9 wrapper for 7-zip compression with aut
 
 Cs7z leverages the power of 7-zip to provide superior compression ratios compared to System.IO.Compression. Below are comprehensive benchmarks showing performance across different file sizes and compression levels.
 
-### Compression Speed Comparison
+### Compression Speed Comparison (All Levels)
 
-| File Size | Cs7z Store | Cs7z Fastest | Cs7z Normal | Cs7z Ultra | ZipArchive |
-|-----------|------------|--------------|-------------|------------|------------|
-| 1 MB      | **17ms**   | 56ms         | 181ms       | 45ms       | 16ms       | 
-| 10 MB     | **21ms**   | 76ms         | 495ms       | 488ms      | 122ms      | 
-| 100 MB    | **46ms**   | 428ms        | 7,086ms     | 7,255ms    | 1,203ms    | 
-| 500 MB    | **441ms**  | 1,971ms      | 20,016ms    | 32,555ms   | 6,459ms    | 
+| File Size | Cs7z Store | Cs7z Fastest | Cs7z Normal | Cs7z Ultra | Zip NoComp | Zip Fastest | Zip Optimal |
+|-----------|------------|--------------|-------------|------------|------------|-------------|-------------|
+| 1 MB      | 11ms       | 55ms         | 72ms        | 40ms       | **1ms**    | 8ms         | 17ms        |
+| 10 MB     | 13ms       | 74ms         | 520ms       | 513ms      | **3ms**    | 64ms        | 123ms       |
+| 50 MB     | 28ms       | 289ms        | 3,686ms     | 3,890ms    | **16ms**   | 290ms       | 638ms       |
+| 100 MB    | 41ms       | 447ms        | 7,774ms     | 7,862ms    | **31ms**   | 561ms       | 1,264ms     |
 
-### Compression Ratio Comparison
+### Compression Ratio Comparison (All Levels)
 
-| File Size | Original | Cs7z Store | Cs7z Fastest | Cs7z Normal | Cs7z Ultra | ZipArchive | 
-|-----------|----------|------------|--------------|-------------|------------|------------|
-| 1 MB      | 1.00 MB  | 1.14 MB    | 1.00 MB      | **1.00 MB** | **1.00 MB** | 1.03 MB    |
-| 10 MB     | 10.00 MB | 10.14 MB   | 8.34 MB      | 8.16 MB     | **8.16 MB** | 8.44 MB    |
-| 100 MB    | 100.00 MB| 100.15 MB  | 72.62 MB     | 66.99 MB    | **66.98 MB**| 72.31 MB   |
-| 500 MB    | 500.00 MB| 500.15 MB  | 358.58 MB    | 328.79 MB   | **328.65 MB**| 356.61 MB  | 
+| File Size | Original | Cs7z Store | Cs7z Fastest | Cs7z Normal | Cs7z Ultra | Zip NoComp | Zip Fastest | Zip Optimal |
+|-----------|----------|------------|--------------|-------------|------------|------------|-------------|-------------|
+| 1 MB      | 1.00 MB  | 1.14 MB    | 1.00 MB      | 1.00 MB     | **1.00 MB** | 1.14 MB    | 1.10 MB     | 1.03 MB     |
+| 10 MB     | 10.00 MB | 10.14 MB   | 8.34 MB      | 8.16 MB     | **8.16 MB** | 10.15 MB   | 9.20 MB     | 8.44 MB     |
+| 50 MB     | 50.00 MB | 50.14 MB   | 37.41 MB     | 35.06 MB    | **35.06 MB**| 50.16 MB   | 41.74 MB    | 37.43 MB    |
+| 100 MB    | 100.00 MB| 100.15 MB  | 72.62 MB     | 66.99 MB    | **66.98 MB**| 100.16 MB  | 81.22 MB    | 72.31 MB    |
+
+### Direct Comparison: No Compression
+
+| File Size | Cs7z Store | Zip NoCompression | Faster |
+|-----------|------------|-------------------|--------|
+| 1 MB      | 11ms       | **1ms**           | Zip 11x |
+| 10 MB     | 13ms       | **3ms**           | Zip 4.3x |
+| 50 MB     | 28ms       | **16ms**          | Zip 1.8x |
+| 100 MB    | 41ms       | **31ms**          | Zip 1.3x |
+
+### Direct Comparison: Best Compression
+
+| File Size | Cs7z Ultra | Zip Optimal | Better Compression | Speed Difference |
+|-----------|------------|-------------|-------------------|------------------|
+| 1 MB      | 1.00 MB (40ms) | 1.03 MB (17ms) | Cs7z (2.7% smaller) | Zip 2.4x faster |
+| 10 MB     | 8.16 MB (513ms) | 8.44 MB (123ms) | Cs7z (2.8% smaller) | Zip 4.2x faster |
+| 50 MB     | 35.06 MB (3,890ms) | 37.43 MB (638ms) | Cs7z (4.7% smaller) | Zip 6.1x faster |
+| 100 MB    | 66.98 MB (7,862ms) | 72.31 MB (1,264ms) | Cs7z (5.3% smaller) | Zip 6.2x faster | 
 
 ### Extraction Speed Comparison
 
-| File Size | Cs7z Extract | ZipArchive Extract |
-|-----------|--------------|-------------------|
-| 1 MB      | 22ms         | **3ms**           |
-| 10 MB     | 29ms         | **10ms**          |
-| 100 MB    | **106ms**    | 59ms              |
-| 500 MB    | **256ms**    | 251ms             | 
+| File Size | Cs7z Extract | ZipArchive Extract | Faster |
+|-----------|--------------|-------------------|--------|
+| 1 MB      | 13ms         | **3ms**           | Zip 4.3x |
+| 10 MB     | 18ms         | **9ms**           | Zip 2.0x |
+| 50 MB     | 47ms         | **26ms**          | Zip 1.8x |
+| 100 MB    | 84ms         | **53ms**          | Zip 1.6x |
 
 ### Key Insights
 
-- **Cs7z Store** (no compression) is the fastest compression option, ideal for already-compressed files
-- **Cs7z Ultra** achieves the best compression ratios, saving 7-8% more space than ZipArchive on larger files
-- **ZipArchive** offers faster extraction for small files but similar performance for large files
-- **Cs7z Normal** provides excellent compression with reasonable speed for medium to large files
-- For files over 100MB, Cs7z provides significantly better compression with minimal extraction time penalty
+- **Speed Leaders**: Zip NoCompression is fastest for archiving without compression (1-31ms for 100MB)
+- **Compression Balance**: Zip Fastest offers good compression (18.8%) with reasonable speed (561ms for 100MB)
+- **Maximum Compression**: Cs7z Ultra achieves 5.3% better compression than Zip Optimal but takes 6x longer
+- **Extraction Speed**: ZipArchive extracts 1.6-4.3x faster than Cs7z across all file sizes
+- **Cross-over Point**: For files over 50MB, the compression advantage of Cs7z becomes more significant
 
 ### Quick Reference: Choosing a Compression Level
 
-- **Need speed?** → Use `CompressionLevel.Store` (46ms for 100MB)
-- **Balanced?** → Use `CompressionLevel.Normal` (7s for 100MB, 33% compression)
-- **Maximum compression?** → Use `CompressionLevel.Ultra` (7.3s for 100MB, 33% compression)
-- **Small files < 10MB?** → Consider using System.IO.Compression instead
+**Need maximum speed (no compression)?**
+- Small files (< 10MB): Use `ZipArchive` with `NoCompression` (3ms for 10MB)
+- Large files (> 50MB): Use `Cs7z.Store` or `ZipArchive.NoCompression` (similar performance)
+
+**Need balanced compression?**
+- Quick compression: Use `ZipArchive.Fastest` (561ms for 100MB, 18.8% savings)
+- Better compression: Use `Cs7z.Normal` (7.8s for 100MB, 33% savings)
+
+**Need maximum compression?**
+- Time available: Use `Cs7z.Ultra` (7.9s for 100MB, 33% savings, 5.3% better than Zip)
+- Time constrained: Use `ZipArchive.Optimal` (1.3s for 100MB, 27.7% savings)
 
 *Benchmarks performed on Apple M4 Pro with .NET 9.0*
 
@@ -156,6 +181,31 @@ await archive.CreateArchive("archive.7z", "folder", CompressionLevel.Ultra);
 - **Fastest**: Log files, temporary backups, or quick transfers
 - **Normal**: General purpose archiving (default if not specified)
 - **Ultra**: Final backups, long-term storage, or distribution packages
+
+## System.IO.Compression Levels
+
+For comparison, System.IO.Compression.ZipArchive offers 3 compression levels:
+
+| Level | Speed | File Size | Compression Ratio | Use Case |
+|-------|-------|-----------|-------------------|----------|
+| **NoCompression** | 31ms | 100.16 MB | 0% | Already compressed files, fastest option |
+| **Fastest** | 561ms | 81.22 MB | 18.8% | Quick compression with reasonable size reduction |
+| **Optimal** | 1,264ms | 72.31 MB | 27.7% | Best compression (default) |
+
+### ZipArchive Usage Example
+
+```csharp
+using System.IO.Compression;
+
+// No compression - fastest
+ZipFile.CreateFromDirectory("folder", "output.zip", CompressionLevel.NoCompression, false);
+
+// Balanced compression
+ZipFile.CreateFromDirectory("folder", "output.zip", CompressionLevel.Fastest, false);
+
+// Maximum compression (default)
+ZipFile.CreateFromDirectory("folder", "output.zip", CompressionLevel.Optimal, false);
+```
 
 ## Platform Support
 
