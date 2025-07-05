@@ -124,6 +124,16 @@ class Program
                 result.ZipArchiveFileSizeFastest = new FileInfo(zipFastestPath).Length;
                 Console.WriteLine($"{result.ZipArchiveCreateFastest} ms ({FormatFileSize(result.ZipArchiveFileSizeFastest)})");
                 
+                // SmallestSize
+                Console.Write("    - SmallestSize: ");
+                var zipSmallestPath = Path.Combine(tempPath, "test_smallest.zip");
+                sw.Restart();
+                ZipFile.CreateFromDirectory(sourceDataPath, zipSmallestPath, System.IO.Compression.CompressionLevel.SmallestSize, false);
+                sw.Stop();
+                result.ZipArchiveCreateSmallestSize = sw.ElapsedMilliseconds;
+                result.ZipArchiveFileSizeSmallestSize = new FileInfo(zipSmallestPath).Length;
+                Console.WriteLine($"{result.ZipArchiveCreateSmallestSize} ms ({FormatFileSize(result.ZipArchiveFileSizeSmallestSize)})");
+                
                 // Test ZipArchive Stream Create
                 Console.Write("  ZipArchive Stream Create: ");
                 var zipStreamPath = Path.Combine(tempPath, "test_stream.zip");
@@ -235,20 +245,20 @@ class Program
         // Display ZipArchive compression level comparison
         Console.WriteLine("\n=== ZipArchive Compression Level Comparison ===");
         Console.WriteLine("\nTiming (milliseconds):");
-        Console.WriteLine("Size | NoCompression | Fastest | Optimal | Speed Gain (NoComp vs Optimal)");
-        Console.WriteLine("-----|---------------|---------|---------|-------------------------------");
+        Console.WriteLine("Size | NoCompression | Fastest | Optimal | SmallestSize | Speed Gain (NoComp vs SmallestSize)");
+        Console.WriteLine("-----|---------------|---------|---------|--------------|------------------------------------");
         
         foreach (var result in results)
         {
-            var speedGain = result.ZipArchiveCreateOptimal > 0 
-                ? $"{(double)result.ZipArchiveCreateNoCompression / result.ZipArchiveCreateOptimal:F1}x faster" 
+            var speedGain = result.ZipArchiveCreateSmallestSize > 0 
+                ? $"{(double)result.ZipArchiveCreateNoCompression / result.ZipArchiveCreateSmallestSize:F1}x faster" 
                 : "N/A";
-            Console.WriteLine($"{result.SizeMB,4} | {result.ZipArchiveCreateNoCompression,13} | {result.ZipArchiveCreateFastest,7} | {result.ZipArchiveCreateOptimal,7} | {speedGain}");
+            Console.WriteLine($"{result.SizeMB,4} | {result.ZipArchiveCreateNoCompression,13} | {result.ZipArchiveCreateFastest,7} | {result.ZipArchiveCreateOptimal,7} | {result.ZipArchiveCreateSmallestSize,12} | {speedGain}");
         }
         
         Console.WriteLine("\nFile Sizes and Compression Ratios:");
-        Console.WriteLine("Size | NoCompression | Fastest     | Optimal     | Size Reduction (NoComp→Optimal)");
-        Console.WriteLine("-----|---------------|-------------|-------------|--------------------------------");
+        Console.WriteLine("Size | NoCompression | Fastest     | Optimal     | SmallestSize | Size Reduction (NoComp→SmallestSize)");
+        Console.WriteLine("-----|---------------|-------------|-------------|--------------|------------------------------------");
         
         foreach (var result in results)
         {
@@ -256,13 +266,14 @@ class Program
             var noCompRatio = (1.0 - (double)result.ZipArchiveFileSizeNoCompression / originalSize) * 100;
             var fastestRatio = (1.0 - (double)result.ZipArchiveFileSizeFastest / originalSize) * 100;
             var optimalRatio = (1.0 - (double)result.ZipArchiveFileSizeOptimal / originalSize) * 100;
+            var smallestRatio = (1.0 - (double)result.ZipArchiveFileSizeSmallestSize / originalSize) * 100;
             
             var sizeReduction = result.ZipArchiveFileSizeNoCompression > 0 
-                ? $"{(1.0 - (double)result.ZipArchiveFileSizeOptimal / result.ZipArchiveFileSizeNoCompression) * 100:F1}%"
+                ? $"{(1.0 - (double)result.ZipArchiveFileSizeSmallestSize / result.ZipArchiveFileSizeNoCompression) * 100:F1}%"
                 : "N/A";
             
-            Console.WriteLine($"{result.SizeMB,4} | {FormatFileSize(result.ZipArchiveFileSizeNoCompression),-13} | {FormatFileSize(result.ZipArchiveFileSizeFastest),-11} | {FormatFileSize(result.ZipArchiveFileSizeOptimal),-11} | {sizeReduction}");
-            Console.WriteLine($"     | ({noCompRatio,4:F1}%)       | ({fastestRatio,4:F1}%)     | ({optimalRatio,4:F1}%)     |");
+            Console.WriteLine($"{result.SizeMB,4} | {FormatFileSize(result.ZipArchiveFileSizeNoCompression),-13} | {FormatFileSize(result.ZipArchiveFileSizeFastest),-11} | {FormatFileSize(result.ZipArchiveFileSizeOptimal),-11} | {FormatFileSize(result.ZipArchiveFileSizeSmallestSize),-12} | {sizeReduction}");
+            Console.WriteLine($"     | ({noCompRatio,4:F1}%)       | ({fastestRatio,4:F1}%)     | ({optimalRatio,4:F1}%)     | ({smallestRatio,4:F1}%)      |");
         }
         
         // Direct comparison between libraries
@@ -278,26 +289,26 @@ class Program
         }
         
         Console.WriteLine("\nBest Compression Comparison:");
-        Console.WriteLine("Size | Cs7z Ultra        | Zip Optimal       | Better Compression");
+        Console.WriteLine("Size | Cs7z Ultra        | Zip SmallestSize  | Better Compression");
         Console.WriteLine("-----|-------------------|-------------------|-------------------");
         
         foreach (var result in results)
         {
             var cs7zSavings = (1.0 - (double)result.SevenZipFileSizeUltra / (result.SizeMB * 1024L * 1024L)) * 100;
-            var zipSavings = (1.0 - (double)result.ZipArchiveFileSizeOptimal / (result.SizeMB * 1024L * 1024L)) * 100;
-            var betterCompression = result.SevenZipFileSizeUltra < result.ZipArchiveFileSizeOptimal 
+            var zipSavings = (1.0 - (double)result.ZipArchiveFileSizeSmallestSize / (result.SizeMB * 1024L * 1024L)) * 100;
+            var betterCompression = result.SevenZipFileSizeUltra < result.ZipArchiveFileSizeSmallestSize 
                 ? $"Cs7z ({cs7zSavings - zipSavings:F1}% better)" 
-                : "ZipArchive";
+                : $"Zip ({zipSavings - cs7zSavings:F1}% better)";
             
-            Console.WriteLine($"{result.SizeMB,4} | {FormatFileSize(result.SevenZipFileSizeUltra)} ({result.SevenZipCreateUltra}ms) | {FormatFileSize(result.ZipArchiveFileSizeOptimal)} ({result.ZipArchiveCreateOptimal}ms) | {betterCompression}");
+            Console.WriteLine($"{result.SizeMB,4} | {FormatFileSize(result.SevenZipFileSizeUltra)} ({result.SevenZipCreateUltra}ms) | {FormatFileSize(result.ZipArchiveFileSizeSmallestSize)} ({result.ZipArchiveCreateSmallestSize}ms) | {betterCompression}");
         }
         
         Console.WriteLine("\nKey Insights:");
-        Console.WriteLine("- Cs7z Store vs Zip NoCompression: Similar speeds, Cs7z slightly faster for larger files");
-        Console.WriteLine("- Cs7z Ultra vs Zip Optimal: Cs7z achieves 7-8% better compression but takes longer");
+        Console.WriteLine("- Cs7z Store vs Zip NoCompression: Similar speeds, with slight variations by file size");
+        Console.WriteLine("- Cs7z Ultra vs Zip SmallestSize: Both achieve maximum compression with different trade-offs");
         Console.WriteLine("- ZipArchive Fastest: Good balance between speed and compression");
-        Console.WriteLine("- For maximum speed with no compression: Use Cs7z Store or Zip NoCompression");
-        Console.WriteLine("- For maximum compression: Use Cs7z Ultra (worth the extra time for large files)");
+        Console.WriteLine("- For maximum speed with no compression: Use Zip NoCompression for small files, either for large files");
+        Console.WriteLine("- For maximum compression: Compare Cs7z Ultra vs Zip SmallestSize based on your time constraints");
         
         Console.WriteLine("\nPress any key to exit...");
         Console.ReadKey();
@@ -471,7 +482,9 @@ class PerformanceResult
     public long ZipArchiveCreateNoCompression { get; set; }
     public long ZipArchiveCreateFastest { get; set; }
     public long ZipArchiveCreateOptimal { get; set; }
+    public long ZipArchiveCreateSmallestSize { get; set; }
     public long ZipArchiveFileSizeNoCompression { get; set; }
     public long ZipArchiveFileSizeFastest { get; set; }
     public long ZipArchiveFileSizeOptimal { get; set; }
+    public long ZipArchiveFileSizeSmallestSize { get; set; }
 }
