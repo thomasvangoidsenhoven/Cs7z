@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <!-- x64 Architecture -->
+      <None Update="Source\osx\x64\7zz">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      
+      <!-- ARM64 Architecture -->
+      <None Update="Source\osx\arm64\7zz">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Cs7z.Archiving.Core\Cs7z.Archiving.Core.csproj" />
+    </ItemGroup>
+
+</Project>

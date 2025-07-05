@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        
+        <!-- NuGet Package Metadata -->
+        <PackageId>Cs7z.Archiving.Service.OmniPlatform</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Your Name</Authors>
+        <Company>Your Company</Company>
+        <Description>Cross-platform .NET 9 wrapper for 7-zip with automatic platform detection. Supports Windows (x86/x64/ARM64), Linux (x86/x64/ARM/ARM64), and macOS (x64/ARM64).</Description>
+        <PackageTags>7zip;7z;archive;compression;decompression;zip;cross-platform;dotnet;csharp</PackageTags>
+        <PackageProjectUrl>https://github.com/yourusername/Cs7z</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/yourusername/Cs7z</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        
+        <!-- Build Configuration -->
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IncludeBuildOutput>true</IncludeBuildOutput>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Core dependency -->
+        <ProjectReference Include="..\Cs7z.Archiving.Core\Cs7z.Archiving.Core.csproj" />
+        
+        <!-- Platform-specific projects - we'll include their DLLs in the package -->
+        <ProjectReference Include="..\Cs7z.Archiving.Service.Windows\Cs7z.Archiving.Service.Windows.csproj">
+            <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+            <IncludeAssets>compile</IncludeAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\Cs7z.Archiving.Service.Linux\Cs7z.Archiving.Service.Linux.csproj">
+            <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+            <IncludeAssets>compile</IncludeAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\Cs7z.Archiving.Service.MacOsx\Cs7z.Archiving.Service.MacOsx.csproj">
+            <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+            <IncludeAssets>compile</IncludeAssets>
+        </ProjectReference>
+    </ItemGroup>
+
+    <!-- Include README -->
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <!-- Include all platform binaries in the package using runtimes folder structure -->
+    <ItemGroup>
+        <!-- Windows binaries -->
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\x86\7za.exe" Pack="true" PackagePath="runtimes\win-x86\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\x86\7za.dll" Pack="true" PackagePath="runtimes\win-x86\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\x86\7zxa.dll" Pack="true" PackagePath="runtimes\win-x86\native\" />
+        
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\x64\7za.exe" Pack="true" PackagePath="runtimes\win-x64\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\x64\7za.dll" Pack="true" PackagePath="runtimes\win-x64\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\x64\7zxa.dll" Pack="true" PackagePath="runtimes\win-x64\native\" />
+        
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\arm64\7za.exe" Pack="true" PackagePath="runtimes\win-arm64\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\arm64\7za.dll" Pack="true" PackagePath="runtimes\win-arm64\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Windows\Source\Windows\arm64\7zxa.dll" Pack="true" PackagePath="runtimes\win-arm64\native\" />
+        
+        <!-- Linux binaries -->
+        <None Include="..\Cs7z.Archiving.Service.Linux\Source\Linux\x86\7zz" Pack="true" PackagePath="runtimes\linux-x86\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Linux\Source\Linux\x64\7zz" Pack="true" PackagePath="runtimes\linux-x64\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Linux\Source\Linux\arm\7zz" Pack="true" PackagePath="runtimes\linux-arm\native\" />
+        <None Include="..\Cs7z.Archiving.Service.Linux\Source\Linux\arm64\7zz" Pack="true" PackagePath="runtimes\linux-arm64\native\" />
+        
+        <!-- macOS binaries -->
+        <None Include="..\Cs7z.Archiving.Service.MacOsx\Source\osx\x64\7zz" Pack="true" PackagePath="runtimes\osx-x64\native\" />
+        <None Include="..\Cs7z.Archiving.Service.MacOsx\Source\osx\arm64\7zz" Pack="true" PackagePath="runtimes\osx-arm64\native\" />
+    </ItemGroup>
+
+</Project>

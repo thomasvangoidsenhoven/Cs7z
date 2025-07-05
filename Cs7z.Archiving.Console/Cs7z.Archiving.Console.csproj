@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Cs7z.Archiving.Core\Cs7z.Archiving.Core.csproj" />
+      <ProjectReference Include="..\Cs7z.Archiving.Service.OmniPlatform\Cs7z.Archiving.Service.OmniPlatform.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="bin.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

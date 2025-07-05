@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['9.0.x']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Test
+      run: dotnet test --configuration Release --no-build --verbosity normal --logger "console;verbosity=detailed"
+    
+    - name: Pack OmniPlatform (Ubuntu only)
+      if: matrix.os == 'ubuntu-latest'
+      run: dotnet pack Cs7z.Archiving.Service.OmniPlatform/Cs7z.Archiving.Service.OmniPlatform.csproj --configuration Release --no-build --output ./artifacts
+    
+    - name: Upload NuGet artifacts
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages-${{ github.sha }}
+        path: ./artifacts/*.nupkg
+        retention-days: 7
