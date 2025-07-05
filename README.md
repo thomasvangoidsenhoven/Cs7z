@@ -30,7 +30,7 @@ Cs7z leverages the power of 7-zip to provide superior compression ratios compare
 
 *Benchmarks performed on Apple M4 Pro with .NET 9.0*
 
-## Installation
+## Installation (Nuget package not  yet available 🏗️)
 
 ```bash
 dotnet add package Cs7z.Archiving.Service.OmniPlatform
@@ -66,6 +66,32 @@ foreach (var file in contents.Files)
 }
 ```
 
+
+### Listing Archive Contents
+
+```csharp
+var result = await archive.ListArchive("archive.7z");
+
+Console.WriteLine($"Archive contains {result.FileCount} files");
+Console.WriteLine($"Total uncompressed size: {result.TotalUncompressedSize:N0} bytes");
+
+foreach (var file in result.Files)
+{
+    Console.WriteLine($"{file.Name}");
+    Console.WriteLine($"  Size: {file.Size:N0} bytes");
+    Console.WriteLine($"  Compressed: {file.CompressedSize:N0} bytes");
+    Console.WriteLine($"  Modified: {file.Modified}");
+    Console.WriteLine($"  CRC32: {file.CRC}");
+}
+```
+
+### Using with Dependency Injection
+
+```csharp
+services.AddSingleton<ISevenZipExecutableSource, OmniPlatformSevenZipExecutableSource>();
+services.AddTransient<ISevenZipArchive, SevenZipArchive>();
+```
+
 ## Compression Levels
 
 Cs7z offers 6 compression levels to balance speed and file size:
@@ -95,46 +121,7 @@ await archive.CreateArchive("output.7z", "folder", CompressionLevel.Ultra);
 
 The OmniPlatform package automatically detects your runtime and uses the appropriate 7-zip binary.
 
-## Advanced Usage
 
-### Error Handling
-
-```csharp
-try
-{
-    await archive.ExtractToDirectoryAsync("archive.7z", "output");
-}
-catch (InvalidOperationException ex)
-{
-    // Handle extraction errors (corrupt archive, wrong password, etc.)
-    Console.WriteLine($"Extraction failed: {ex.Message}");
-}
-```
-
-### Listing Archive Contents
-
-```csharp
-var result = await archive.ListArchive("archive.7z");
-
-Console.WriteLine($"Archive contains {result.FileCount} files");
-Console.WriteLine($"Total uncompressed size: {result.TotalUncompressedSize:N0} bytes");
-
-foreach (var file in result.Files)
-{
-    Console.WriteLine($"{file.Name}");
-    Console.WriteLine($"  Size: {file.Size:N0} bytes");
-    Console.WriteLine($"  Compressed: {file.CompressedSize:N0} bytes");
-    Console.WriteLine($"  Modified: {file.Modified}");
-    Console.WriteLine($"  CRC32: {file.CRC}");
-}
-```
-
-### Using with Dependency Injection
-
-```csharp
-services.AddSingleton<ISevenZipExecutableSource, OmniPlatformSevenZipExecutableSource>();
-services.AddTransient<ISevenZipArchive, SevenZipArchive>();
-```
 
 ## Deployment Considerations
 
@@ -147,7 +134,7 @@ The 7-zip executables are embedded in the platform-specific assemblies and extra
 
 ### Security Notes
 
-- The library extracts executables to the system's temp directory
+- The library extracts executables to the build's directory
 - Executables are verified to be from the embedded resources
 - Consider application signing and security policies in restricted environments
 
